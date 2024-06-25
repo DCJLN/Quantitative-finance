@@ -32,5 +32,8 @@ class TechnicalIndicator:
             sys.exit()
         rstd = prices.rolling(window=days).std()
         upper_band = sma + (rstd * std_factor)
+        upper_band = upper_band.rename('upper_bb')
         lower_band = sma - (rstd * std_factor)
+        lower_band = lower_band.rename('lower_bb')
+
         return upper_band, lower_band
