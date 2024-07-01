@@ -64,3 +64,5 @@ class InvestBot:
             print("Please compute investing signals before backtesting it.")
             raise ValueError
 
+
+
