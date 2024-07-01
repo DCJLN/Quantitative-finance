@@ -25,8 +25,8 @@ def main():
     }
 
     # Creating the investment bot
-    inv_bot = InvestBot(fin_data=data, parameters=parameters)
-    inv_bot.bb_out_up_strategy()
+    inv_bot = InvestBot(fin_data=data)
+    inv_bot.bb_out_up_strategy(parameters=parameters)
 
 
 if __name__ == '__main__':

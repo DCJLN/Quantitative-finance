@@ -20,12 +20,14 @@ def sma(prices, period):
         sys.exit()
     sma = prices.rolling(window=period).mean()
     return sma
-    
+
 
 # top Bollinger band computation
 def top_bb(prices, sma, period):
     if len(prices) < len(sma) or len(prices) < period:
-        print("The dataframe do not contain enough prices to compute the top Bollinger band associated to the {}-moving average.".format(period))
+        print(
+            "The dataframe do not contain enough prices to compute the top Bollinger band associated to the {}-moving average.".format(
+                period))
         sys.exit()
     moving_std = prices.rolling(window=period).std()
     top_bb = sma + (moving_std * 2)
@@ -35,7 +37,9 @@ def top_bb(prices, sma, period):
 # bottom Bollinger band computation
 def bottom_bb(prices, sma, period):
     if len(prices) < len(sma) or len(prices) < period:
-        print("The dataframe do not contain enough prices to compute the bottom Bollinger band associated to the {}-moving average.".format(period))
+        print(
+            "The dataframe do not contain enough prices to compute the bottom Bollinger band associated to the {}-moving average.".format(
+                period))
         sys.exit()
     moving_std = prices.rolling(window=period).std()
     bottom_bb = sma - (moving_std * 2)
@@ -49,7 +53,6 @@ def send_message_telegram_bot(bot_token, chat_id, msg):
 
 
 def main():
-    
     # Telegram parameters
     bot_token = "1655691274:AAHHedeRuokjTZh3o0pGLsT1AZMKL2mr_vg"
     chat_id = 1427772968
@@ -88,7 +91,6 @@ def main():
         msg += "Price: {} \n".format(round(sp500_df['Low'][-1], 2))
         msg += "Bottom Bollinger Band: {} \n".format(round(sp500_df['bottom_bb'][-1], 2))
         send_message_telegram_bot(bot_token=bot_token, chat_id=chat_id, msg=msg)
-
 
 
 if __name__ == "__main__":
