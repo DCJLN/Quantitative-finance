@@ -13,7 +13,7 @@ class TechnicalIndicator:
         """
         if len(prices) < days:
             print(f"The df does not contain enough prices to compute the {days}-sma.")
-            sys.exit()
+            raise ValueError
         sma = prices.rolling(window=days).mean()
         return sma
 
@@ -29,7 +29,7 @@ class TechnicalIndicator:
         """
         if len(prices) < len(sma) or len(prices) < days:
             print(f"The df does not contain enough prices or sma values to compute the Bollinger bands.")
-            sys.exit()
+            raise ValueError
         rstd = prices.rolling(window=days).std()
         upper_band = sma + (rstd * std_factor)
         upper_band = upper_band.rename('upper_bb')
