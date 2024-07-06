@@ -9,6 +9,7 @@ def main():
     HIST_PERIOD = '1y'
     INTERVAL = '1d'
     TICKER = "^GSPC"
+    # TICKER = "CSPX.L"
 
     # Downloading financial data
     data = yf.download(tickers=TICKER, period=HIST_PERIOD, interval=INTERVAL)
@@ -26,7 +27,12 @@ def main():
 
     # Creating the investment bot
     inv_bot = InvestBot(fin_data=data)
+
     inv_bot.bb_out_up_strategy(parameters=parameters)
+    inv_bot.back_testing()
+
+    inv_bot.first_day_month_strategy()
+    inv_bot.back_testing()
 
 
 if __name__ == '__main__':

@@ -16,7 +16,8 @@ class InvestBot:
         """
         Investment strategy that will identify the first positive closing prices after crossing down the lower Bollinger
         band.
-        @return: None
+        @param parameters: Bollinger bands parameters.
+        @return: financial data with new column 'signals'.
         """
 
         print("BB out-up strategy launched...")
@@ -50,6 +51,27 @@ class InvestBot:
             else:
                 signals.append(False)
                 i += 1
+
+        self.fin_data['signal'] = signals
+        print(f"=> {sum(self.fin_data['signal'])} signal(s) found during the period.")
+
+        return self.fin_data
+
+    def first_day_month_strategy(self):
+        """
+        Investment strategy that simply consists of investing the first day of each month.
+        @return:
+        """
+
+        print("First day of month strategy launched...")
+
+        signals = []
+        for i in range(len(self.fin_data)):
+            if self.fin_data.index[i].day == 1:
+                signals.append(True)
+            else:
+                signals.append(False)
+
         self.fin_data['signal'] = signals
         print(f"=> {sum(self.fin_data['signal'])} signal(s) found during the period.")
 
@@ -57,12 +79,22 @@ class InvestBot:
 
     def back_testing(self):
         """
-
-        @return:
+        Method that will evaluate the profitability of a strategy in the past.
+        @return: None
         """
-        if 'signal' not in self.fin_data.columns or self.fin_data['signals'].empty:
-            print("Please compute investing signals before backtesting it.")
-            raise ValueError
 
+        # if 'signal' not in self.fin_data.columns or self.fin_data['signals'].empty:
+        #     print("Please compute investing signals before backtesting it.")
+        #     raise ValueError
 
+        position = []
+        for i in range(len(self.fin_data)):
+            if self.fin_data.iloc[i]['signal']:
+                position.append(self.fin_data.iloc[i]['Adj Close'])
 
+        buy_value = sum(position)
+
+        sell_value = self.fin_data['Adj Close'].iloc[-1] * len(position)
+        ROI = ((sell_value - buy_value)/buy_value) * 100
+
+        print(f"=> The ROI of this investment strategy is {round(ROI, 2)}%.")
