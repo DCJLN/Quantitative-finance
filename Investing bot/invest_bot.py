@@ -10,7 +10,6 @@ class InvestBot:
         print(35 * "_")
         print("**New invest bot has been created**")
         print(35 * "_")
-        print("")
 
     def bb_out_up_strategy(self, parameters: dict):
         """
@@ -20,29 +19,29 @@ class InvestBot:
         @return: financial data with new column 'signals'.
         """
 
-        print("BB out-up strategy launched...")
+        print("\nBB out-up strategy launched...")
+
+        fin_data = self.fin_data.copy()
 
         # Computing the 20-days SMA
-        sma_values = TechnicalIndicator.sma(prices=self.fin_data['Adj Close'], days=parameters['rolling_days'])
-        self.fin_data = self.fin_data.join(sma_values.rename('sma'))
+        sma_values = TechnicalIndicator.sma(prices=fin_data['Adj Close'], days=parameters['rolling_days'])
+        fin_data = fin_data.join(sma_values.rename('sma'))
 
         # Computing the Bollinger bands
-        upper_bb, lower_bb = TechnicalIndicator.bollinger_bands(prices=self.fin_data['Adj Close'],
+        upper_bb, lower_bb = TechnicalIndicator.bollinger_bands(prices=fin_data['Adj Close'],
                                                                 days=parameters['rolling_days'],
                                                                 std_factor=parameters['std_factor'],
-                                                                sma=self.fin_data['sma'])
-        self.fin_data = self.fin_data.join(upper_bb).join(lower_bb)
+                                                                sma=fin_data['sma'])
+        fin_data = fin_data.join(upper_bb).join(lower_bb)
 
-        signals = []
-        i = 0
-        while i < len(self.fin_data):
-            if i == 0:
-                signals.append(False)
-                i += 1
-            elif self.fin_data.iloc[i]['Adj Close'] < self.fin_data.iloc[i]['lower_bb'] \
-                    and self.fin_data.iloc[i - 1]['Adj Close'] > self.fin_data.iloc[i - 1]['lower_bb']:
-                for j in range(i, len(self.fin_data)):
-                    if self.fin_data.iloc[j]['Adj Close'] > self.fin_data.iloc[j - 1]['Adj Close']:
+        i = parameters['rolling_days'] + 1
+        signals = [False] * i
+        while i < len(fin_data):
+            if fin_data.iloc[i]['Adj Close'] < fin_data.iloc[i]['lower_bb'] \
+                    and fin_data.iloc[i - 1]['Adj Close'] > fin_data.iloc[i - 1]['lower_bb']:
+                for j in range(i, len(fin_data)):
+                    # if fin_data.iloc[j]['Adj Close'] > fin_data.iloc[j - 1]['Adj Close']:
+                    if fin_data.iloc[j]['Adj Close'] > fin_data.iloc[j]['Open']:
                         signals.append(True)
                         i = j + 1
                         break
@@ -52,10 +51,10 @@ class InvestBot:
                 signals.append(False)
                 i += 1
 
-        self.fin_data['signal'] = signals
-        print(f"=> {sum(self.fin_data['signal'])} signal(s) found during the period.")
+        fin_data['signal'] = signals
+        print(f"=> {sum(signals)} signal(s) found during the period.")
 
-        return self.fin_data
+        return fin_data
 
     def first_day_month_strategy(self):
         """
@@ -63,33 +62,35 @@ class InvestBot:
         @return:
         """
 
-        print("First day of month strategy launched...")
+        print("\nFirst day of month strategy launched...")
+
+        fin_data = self.fin_data.copy()
 
         signals = []
-        for i in range(len(self.fin_data)):
-            if self.fin_data.index[i].day == 1:
+        for i in range(len(fin_data)):
+            if fin_data.index[i].day == 1:
                 signals.append(True)
             else:
                 signals.append(False)
 
-        self.fin_data['signal'] = signals
-        print(f"=> {sum(self.fin_data['signal'])} signal(s) found during the period.")
+        fin_data['signal'] = signals
+        print(f"=> {sum(signals)} signal(s) found during the period.")
 
-        return self.fin_data
+        return fin_data
 
-    def back_testing(self):
+    def back_testing(self, signal_data: pd.DataFrame):
         """
         Method that will evaluate the profitability of a strategy in the past.
         @return: None
         """
 
-        # if 'signal' not in self.fin_data.columns or self.fin_data['signals'].empty:
-        #     print("Please compute investing signals before backtesting it.")
-        #     raise ValueError
+        if 'signal' not in signal_data.columns or signal_data['signal'].empty:
+            print("Please compute investing signals before backtesting it.")
+            raise ValueError
 
         position = []
-        for i in range(len(self.fin_data)):
-            if self.fin_data.iloc[i]['signal']:
+        for i in range(len(signal_data)):
+            if signal_data.iloc[i]['signal']:
                 position.append(self.fin_data.iloc[i]['Adj Close'])
 
         buy_value = sum(position)
