@@ -6,7 +6,7 @@ from invest_bot import InvestBot
 
 def main():
     # Parameters
-    HIST_PERIOD = '1y'
+    HIST_PERIOD = '3y'
     INTERVAL = '1d'
     TICKER = "^GSPC"
     # TICKER = "CSPX.L"
@@ -24,14 +24,12 @@ def main():
         'std_factor': 2,
     }
 
-    print(data.index)
-
     # Creating the investment bot
     inv_bot = InvestBot(fin_data=data)
 
     bb_out_up_signals = inv_bot.bb_out_up_strategy(parameters=parameters)
-    bb_out_up_signals.to_excel('test.xlsx')
     inv_bot.back_testing(bb_out_up_signals)
+    inv_bot.signal_visualization(bb_out_up_signals)
 
     first_d_m_signals = inv_bot.first_day_month_strategy()
     inv_bot.back_testing(first_d_m_signals)

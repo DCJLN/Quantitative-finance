@@ -1,4 +1,5 @@
 import pandas as pd
+import plotly.graph_objects as go
 
 # classes
 from technical_indicator import TechnicalIndicator
@@ -81,6 +82,7 @@ class InvestBot:
     def back_testing(self, signal_data: pd.DataFrame):
         """
         Method that will evaluate the profitability of a strategy in the past.
+        @param signal_data: dataframe containing all data used in the strategy computation as well as signals.
         @return: None
         """
 
@@ -96,6 +98,26 @@ class InvestBot:
         buy_value = sum(position)
 
         sell_value = self.fin_data['Adj Close'].iloc[-1] * len(position)
-        ROI = ((sell_value - buy_value)/buy_value) * 100
+        ROI = ((sell_value - buy_value) / buy_value) * 100
 
         print(f"=> The ROI of this investment strategy is {round(ROI, 2)}%.")
+
+    def signal_visualization(self, signal_data: pd.DataFrame):
+        """
+        Creating graph to visualize investment.
+        @param signal_data: dataframe containing all data used in the strategy computation as well as signals.
+        @return: None
+        """
+        fig = go.Figure()
+
+        # Adding the traces
+        fig.add_trace(go.Scatter(x=signal_data.index, y=signal_data['Adj Close'], line=dict(color='blue')))
+        fig.add_trace(go.Scatter(x=signal_data.index, y=signal_data['upper_bb'], line=dict(color='purple', width=1)))
+        fig.add_trace(go.Scatter(x=signal_data.index, y=signal_data['lower_bb'], line=dict(color='purple', width=1)))
+        fig.add_trace(go.Scatter(x=signal_data.index, y=signal_data['sma'], line=dict(color='red', width=1)))
+
+        highlighted_signals = signal_data[signal_data['signal']]
+        fig.add_trace(go.Scatter(x=highlighted_signals.index, y=highlighted_signals['Adj Close'], mode='markers',
+                                 marker=dict(color='green', size=10, symbol='circle')))
+
+        fig.show()
