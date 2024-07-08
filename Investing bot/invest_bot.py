@@ -12,11 +12,12 @@ class InvestBot:
         print("**New invest bot has been created**")
         print(35 * "_")
 
-    def bb_out_up_strategy(self, parameters: dict):
+    def bb_out_up_strategy(self, parameters: dict, plotting: bool):
         """
         Investment strategy that will identify the first positive closing prices after crossing down the lower Bollinger
         band.
         @param parameters: Bollinger bands parameters.
+        @param plotting: determine if graph for visualization has to be created.
         @return: financial data with new column 'signals'.
         """
 
@@ -26,20 +27,20 @@ class InvestBot:
 
         # Computing the 20-days SMA
         sma_values = TechnicalIndicator.sma(prices=fin_data['Adj Close'], days=parameters['rolling_days'])
-        fin_data = fin_data.join(sma_values.rename('sma'))
+        fin_data = fin_data.join(sma_values.rename(f'sma_{parameters["rolling_days"]}'))
 
         # Computing the Bollinger bands
         upper_bb, lower_bb = TechnicalIndicator.bollinger_bands(prices=fin_data['Adj Close'],
                                                                 days=parameters['rolling_days'],
                                                                 std_factor=parameters['std_factor'],
-                                                                sma=fin_data['sma'])
+                                                                sma=fin_data[f'sma_{parameters["rolling_days"]}'])
         fin_data = fin_data.join(upper_bb).join(lower_bb)
 
         i = parameters['rolling_days'] + 1
         signals = [False] * i
         while i < len(fin_data):
-            if fin_data.iloc[i]['Adj Close'] < fin_data.iloc[i]['lower_bb'] \
-                    and fin_data.iloc[i - 1]['Adj Close'] > fin_data.iloc[i - 1]['lower_bb']:
+            if (fin_data.iloc[i]['Adj Close'] < fin_data.iloc[i]['lower_bb']
+                    and fin_data.iloc[i - 1]['Adj Close'] > fin_data.iloc[i - 1]['lower_bb']):
                 for j in range(i, len(fin_data)):
                     # if fin_data.iloc[j]['Adj Close'] > fin_data.iloc[j - 1]['Adj Close']:
                     if fin_data.iloc[j]['Adj Close'] > fin_data.iloc[j]['Open']:
@@ -55,11 +56,27 @@ class InvestBot:
         fin_data['signal'] = signals
         print(f"=> {sum(signals)} signal(s) found during the period.")
 
+        if plotting:
+            fig = go.Figure()
+
+            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['Adj Close'], line=dict(color='blue')))
+            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['upper_bb'], line=dict(color='purple', width=1)))
+            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['lower_bb'], line=dict(color='purple', width=1)))
+            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data[f'sma_{parameters["rolling_days"]}'],
+                                     line=dict(color='red', width=1)))
+
+            highlighted_signals = fin_data[fin_data['signal']]
+            fig.add_trace(go.Scatter(x=highlighted_signals.index, y=highlighted_signals['Adj Close'], mode='markers',
+                                     marker=dict(color='green', size=10, symbol='circle')))
+
+            fig.show()
+
         return fin_data
 
-    def first_day_month_strategy(self):
+    def first_day_month_strategy(self, plotting: bool):
         """
         Investment strategy that simply consists of investing the first day of each month.
+        @param plotting: determine if graph for visualization has to be created.
         @return:
         """
 
@@ -76,6 +93,17 @@ class InvestBot:
 
         fin_data['signal'] = signals
         print(f"=> {sum(signals)} signal(s) found during the period.")
+
+        if plotting:
+            fig = go.Figure()
+
+            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['Adj Close'], line=dict(color='blue')))
+
+            highlighted_signals = fin_data[fin_data['signal']]
+            fig.add_trace(go.Scatter(x=highlighted_signals.index, y=highlighted_signals['Adj Close'], mode='markers',
+                                     marker=dict(color='green', size=10, symbol='circle')))
+
+            fig.show()
 
         return fin_data
 
@@ -101,23 +129,3 @@ class InvestBot:
         ROI = ((sell_value - buy_value) / buy_value) * 100
 
         print(f"=> The ROI of this investment strategy is {round(ROI, 2)}%.")
-
-    def signal_visualization(self, signal_data: pd.DataFrame):
-        """
-        Creating graph to visualize investment.
-        @param signal_data: dataframe containing all data used in the strategy computation as well as signals.
-        @return: None
-        """
-        fig = go.Figure()
-
-        # Adding the traces
-        fig.add_trace(go.Scatter(x=signal_data.index, y=signal_data['Adj Close'], line=dict(color='blue')))
-        fig.add_trace(go.Scatter(x=signal_data.index, y=signal_data['upper_bb'], line=dict(color='purple', width=1)))
-        fig.add_trace(go.Scatter(x=signal_data.index, y=signal_data['lower_bb'], line=dict(color='purple', width=1)))
-        fig.add_trace(go.Scatter(x=signal_data.index, y=signal_data['sma'], line=dict(color='red', width=1)))
-
-        highlighted_signals = signal_data[signal_data['signal']]
-        fig.add_trace(go.Scatter(x=highlighted_signals.index, y=highlighted_signals['Adj Close'], mode='markers',
-                                 marker=dict(color='green', size=10, symbol='circle')))
-
-        fig.show()

@@ -27,11 +27,10 @@ def main():
     # Creating the investment bot
     inv_bot = InvestBot(fin_data=data)
 
-    bb_out_up_signals = inv_bot.bb_out_up_strategy(parameters=parameters)
+    bb_out_up_signals = inv_bot.bb_out_up_strategy(parameters=parameters, plotting=True)
     inv_bot.back_testing(bb_out_up_signals)
-    inv_bot.signal_visualization(bb_out_up_signals)
 
-    first_d_m_signals = inv_bot.first_day_month_strategy()
+    first_d_m_signals = inv_bot.first_day_month_strategy(plotting=False)
     inv_bot.back_testing(first_d_m_signals)
 
 
