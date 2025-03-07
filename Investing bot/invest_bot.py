@@ -12,7 +12,7 @@ class InvestBot:
         print("**New invest bot has been created**")
         print(35 * "_")
 
-    def bb_out_up_strategy(self, parameters: dict, plotting: bool):
+    def bb_out_up_strategy(self, plotting: bool, parameters=None):
         """
         Investment strategy that will identify the first positive closing prices after crossing down the lower Bollinger
         band.
@@ -20,6 +20,9 @@ class InvestBot:
         @param plotting: determine if graph for visualization has to be created.
         @return: financial data with new column 'signals'.
         """
+
+        if parameters is None:
+            parameters = {'rolling_days': 20, 'std_factor': 2}
 
         print("\nBB out-up strategy launched...")
 
@@ -57,18 +60,18 @@ class InvestBot:
         print(f"=> {sum(signals)} signal(s) found during the period.")
 
         if plotting:
-            fig = go.Figure()
-
-            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['Adj Close'], line=dict(color='blue')))
-            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['upper_bb'], line=dict(color='purple', width=1)))
-            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['lower_bb'], line=dict(color='purple', width=1)))
-            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data[f'sma_{parameters["rolling_days"]}'],
-                                     line=dict(color='red', width=1)))
+            fig = go.Figure(layout=dict(template="plotly_dark"))
+            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['Adj Close']))
+            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['upper_bb'], fill=None,
+                                     line=dict(color='rgba(128, 0, 128, 0.1)', width=1)))
+            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['lower_bb'], fill='tonexty',
+                                     line=dict(color='rgba(128, 0, 128, 0.1)', width=1), fillcolor='rgba(178, 102, 255, 0.15)'))
+            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data[f'sma_{parameters["rolling_days"]}'], line=dict(color='red', width=1)))
 
             highlighted_signals = fin_data[fin_data['signal']]
             fig.add_trace(go.Scatter(x=highlighted_signals.index, y=highlighted_signals['Adj Close'], mode='markers',
-                                     marker=dict(color='green', size=10, symbol='circle')))
-
+                                     marker=dict(color='yellow', size=8, symbol='circle')))
+            fig.update_layout(showlegend=False)
             fig.show()
 
         return fin_data
@@ -95,37 +98,14 @@ class InvestBot:
         print(f"=> {sum(signals)} signal(s) found during the period.")
 
         if plotting:
-            fig = go.Figure()
+            fig = go.Figure(layout=dict(template="plotly_dark"))
 
-            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['Adj Close'], line=dict(color='blue')))
+            fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['Adj Close']))
 
             highlighted_signals = fin_data[fin_data['signal']]
             fig.add_trace(go.Scatter(x=highlighted_signals.index, y=highlighted_signals['Adj Close'], mode='markers',
-                                     marker=dict(color='green', size=10, symbol='circle')))
-
+                                     marker=dict(color='yellow', size=10, symbol='circle')))
+            fig.update_layout(showlegend=False)
             fig.show()
 
         return fin_data
-
-    def back_testing(self, signal_data: pd.DataFrame):
-        """
-        Method that will evaluate the profitability of a strategy in the past.
-        @param signal_data: dataframe containing all data used in the strategy computation as well as signals.
-        @return: None
-        """
-
-        if 'signal' not in signal_data.columns or signal_data['signal'].empty:
-            print("Please compute investing signals before backtesting it.")
-            raise ValueError
-
-        position = []
-        for i in range(len(signal_data)):
-            if signal_data.iloc[i]['signal']:
-                position.append(self.fin_data.iloc[i]['Adj Close'])
-
-        buy_value = sum(position)
-
-        sell_value = self.fin_data['Adj Close'].iloc[-1] * len(position)
-        ROI = ((sell_value - buy_value) / buy_value) * 100
-
-        print(f"=> The ROI of this investment strategy is {round(ROI, 2)}%.")
