@@ -2,16 +2,6 @@ import pandas as pd
 import yfinance as yf
 from technical_indicator import TechnicalIndicator
 from invest_bot import InvestBot
-import asyncio
-import telegram
-
-
-def send_telegram_alert(msg):
-    # Parameters
-    bot_token = "7191274095:AAHWT5vXJ2owAZXptfxfsXy5hBTsb2AKIMY"
-    chat_id = 7162781343
-    bot = telegram.Bot(token=bot_token)
-    asyncio.run(bot.send_message(chat_id=chat_id, text=msg))
 
 
 def main():
@@ -31,10 +21,13 @@ def main():
     # Creating the investment bot
     inv_bot = InvestBot(fin_data=sp_500_data)
 
-    bb_out_up_signals = inv_bot.bb_out_up_strategy(parameters=None, plotting=False)
-    first_d_m_signals = inv_bot.first_day_month_strategy(plotting=False)
-
-    send_telegram_alert(msg='test2')
+    # Applying the strategy
+    # bb_out_up_signals, graph = inv_bot.bb_out_up_strategy(parameters=None, plotting=False)
+    #
+    # if not bb_out_up_signals['signal'].iloc[-1]:
+    #     msg = f'New signal from bb_out_up strategy:\n'
+    #     msg += f'\t -> {TICKER} value: {round(sp_500_data["Adj Close"].iloc[-1], 2)}'
+    #     inv_bot.send_telegram_alert(msg, graph)
 
 
 if __name__ == '__main__':
