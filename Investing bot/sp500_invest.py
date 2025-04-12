@@ -54,6 +54,7 @@ def main():
     # Applying the strategy
     bb_out_up_signals, bb_out_up_fig = inv_bot.bb_out_up_strategy(parameters=None, graph_length=50)
 
+    # Sending message in case of signal
     if bb_out_up_signals['signal'].iloc[-1]:
         msg = f'New signal from bb_out_up strategy:\n'
         msg += f'\t -> {TICKER} value: {round(sp_500_data["Adj Close"].iloc[-1], 2)}'
