@@ -11,7 +11,10 @@ def main():
     TICKER = "^GSPC"
 
     # Downloading financial data
-    sp_500_data = yf.download(tickers=TICKER, period=HIST_PERIOD, interval=INTERVAL, auto_adjust=False,
+    sp_500_data = yf.download(tickers=TICKER,
+                              period=HIST_PERIOD,
+                              interval=INTERVAL,
+                              auto_adjust=False,
                               multi_level_index=False)
 
     # Cleaning and formatting data
@@ -24,7 +27,7 @@ def main():
     # Applying the strategy
     bb_out_up_signals, fig = inv_bot.bb_out_up_strategy(parameters=None, graph_length=50)
 
-    if not bb_out_up_signals['signal'].iloc[-1]:
+    if bb_out_up_signals['signal'].iloc[-1]:
         msg = f'New signal from bb_out_up strategy:\n'
         msg += f'\t -> {TICKER} value: {round(sp_500_data["Adj Close"].iloc[-1], 2)}'
         inv_bot.send_telegram_alert(msg, fig)
