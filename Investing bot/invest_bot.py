@@ -1,7 +1,7 @@
 import pandas as pd
 import plotly.graph_objects as go
-import asyncio
 import telegram
+import asyncio
 from io import BytesIO
 
 # classes
@@ -15,12 +15,12 @@ class InvestBot:
         print("**New invest bot has been created**")
         print(35 * "_")
 
-    def bb_out_up_strategy(self, plotting: bool, parameters=None):
+    def bb_out_up_strategy(self, parameters=None, graph_length=50):
         """
         Investment strategy that will identify the first positive closing prices after crossing down the lower Bollinger
         band.
         @param parameters: Bollinger bands parameters.
-        @param plotting: determine if graph for visualization has to be created.
+        @param graph_length: number of data to plot.
         @return: financial data with new column 'signals'.
         """
 
@@ -63,17 +63,18 @@ class InvestBot:
         fin_data['signal'] = signals
         print(f"=> {sum(signals)} signal(s) found during the period.")
 
+        plot_data = fin_data.tail(graph_length)
         fig = go.Figure(layout=dict(template="plotly_dark"))
-        fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['Adj Close']))
-        fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['upper_bb'], fill=None,
+        fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data['Adj Close']))
+        fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data['upper_bb'], fill=None,
                                  line=dict(color='rgba(128, 0, 128, 0.1)', width=1)))
-        fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data['lower_bb'], fill='tonexty',
+        fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data['lower_bb'], fill='tonexty',
                                  line=dict(color='rgba(128, 0, 128, 0.1)', width=1),
                                  fillcolor='rgba(178, 102, 255, 0.15)'))
-        fig.add_trace(go.Scatter(x=fin_data.index, y=fin_data[f'sma_{parameters["rolling_days"]}'],
+        fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data[f'sma_{parameters["rolling_days"]}'],
                                  line=dict(color='red', width=1)))
 
-        highlighted_signals = fin_data[fin_data['signal']]
+        highlighted_signals = plot_data[plot_data['signal']]
         fig.add_trace(go.Scatter(x=highlighted_signals.index, y=highlighted_signals['Adj Close'], mode='markers',
                                  marker=dict(color='yellow', size=8, symbol='circle')))
         fig.update_layout(showlegend=False)
@@ -85,12 +86,11 @@ class InvestBot:
     def send_telegram_alert(self, msg, fig):
         """
         Function that manage message sending to telegram channel/
-        @param msg: The message to send
+        @param msg: the message to send
+        @param fig: the plotly figure to send
         @return: None
         """
-        image_io = BytesIO()
-        fig.write_image(image_io, format='png')
-        image_io.seek(0)
+        fig.write_image('fig_to_send.png', engine='orca')
 
         bot_token = "7191274095:AAHWT5vXJ2owAZXptfxfsXy5hBTsb2AKIMY"
         chat_id = 7162781343
@@ -98,8 +98,13 @@ class InvestBot:
 
         # asyncio.run(bot.send_message(chat_id=chat_id, text=msg))
         async def send():
-            await bot.send_photo(chat_id=chat_id, photo=image_io, caption=msg)
+            await bot.send_photo(chat_id=chat_id, photo=open('fig_to_send.png', 'rb'), caption=msg)
 
-        asyncio.run(send())
+        try:
+            asyncio.run(send())
+        except RuntimeError:
+            # In case there's already an event loop running (e.g., Jupyter)
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(send())
 
-        print(f"=> Alert sent.")
+        print("=> Alert sent.")

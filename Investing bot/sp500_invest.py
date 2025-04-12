@@ -22,12 +22,12 @@ def main():
     inv_bot = InvestBot(fin_data=sp_500_data)
 
     # Applying the strategy
-    # bb_out_up_signals, graph = inv_bot.bb_out_up_strategy(parameters=None, plotting=False)
-    #
-    # if not bb_out_up_signals['signal'].iloc[-1]:
-    #     msg = f'New signal from bb_out_up strategy:\n'
-    #     msg += f'\t -> {TICKER} value: {round(sp_500_data["Adj Close"].iloc[-1], 2)}'
-    #     inv_bot.send_telegram_alert(msg, graph)
+    bb_out_up_signals, fig = inv_bot.bb_out_up_strategy(parameters=None, graph_length=50)
+
+    if not bb_out_up_signals['signal'].iloc[-1]:
+        msg = f'New signal from bb_out_up strategy:\n'
+        msg += f'\t -> {TICKER} value: {round(sp_500_data["Adj Close"].iloc[-1], 2)}'
+        inv_bot.send_telegram_alert(msg, fig)
 
 
 if __name__ == '__main__':
