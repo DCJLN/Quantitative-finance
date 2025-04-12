@@ -1,9 +1,5 @@
 import pandas as pd
 import plotly.graph_objects as go
-import telegram
-import asyncio
-
-# classes
 from technical_indicator import TechnicalIndicator
 
 
@@ -81,30 +77,3 @@ class InvestBot:
         fig.update_layout(showlegend=False)
 
         return fin_data, fig
-
-    # noinspection PyMethodMayBeStatic
-    def send_telegram_alert(self, msg, fig):
-        """
-        Function that manage message sending to telegram channel/
-        @param msg: the message to send
-        @param fig: the plotly figure to send
-        @return: None
-        """
-        fig.write_image('fig_to_send.png', engine='orca')
-
-        bot_token = "7191274095:AAHWT5vXJ2owAZXptfxfsXy5hBTsb2AKIMY"
-        chat_id = 7162781343
-        bot = telegram.Bot(token=bot_token)
-
-        # asyncio.run(bot.send_message(chat_id=chat_id, text=msg))
-        async def send():
-            await bot.send_photo(chat_id=chat_id, photo=open('fig_to_send.png', 'rb'), caption=msg)
-
-        try:
-            asyncio.run(send())
-        except RuntimeError:
-            # In case there's already an event loop running (e.g., Jupyter)
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(send())
-
-        print("=> Alert sent.")
