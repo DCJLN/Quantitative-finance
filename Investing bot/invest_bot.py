@@ -2,7 +2,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import telegram
 import asyncio
-from io import BytesIO
 
 # classes
 from technical_indicator import TechnicalIndicator
@@ -42,6 +41,7 @@ class InvestBot:
                                                                 sma=fin_data[f'sma_{parameters["rolling_days"]}'])
         fin_data = fin_data.join(upper_bb).join(lower_bb)
 
+        # Signal occurrence calculation
         i = parameters['rolling_days'] + 1
         signals = [False] * len(fin_data)
         while i < len(fin_data):
@@ -63,6 +63,7 @@ class InvestBot:
         fin_data['signal'] = signals
         print(f"=> {sum(signals)} signal(s) found during the period.")
 
+        # Figure creation
         plot_data = fin_data.tail(graph_length)
         fig = go.Figure(layout=dict(template="plotly_dark"))
         fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data['Adj Close']))
@@ -78,7 +79,6 @@ class InvestBot:
         fig.add_trace(go.Scatter(x=highlighted_signals.index, y=highlighted_signals['Adj Close'], mode='markers',
                                  marker=dict(color='yellow', size=8, symbol='circle')))
         fig.update_layout(showlegend=False)
-        # fig.show()
 
         return fin_data, fig
 

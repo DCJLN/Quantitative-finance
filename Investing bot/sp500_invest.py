@@ -1,6 +1,4 @@
-import pandas as pd
 import yfinance as yf
-from technical_indicator import TechnicalIndicator
 from invest_bot import InvestBot
 
 
@@ -25,12 +23,14 @@ def main():
     inv_bot = InvestBot(fin_data=sp_500_data)
 
     # Applying the strategy
-    bb_out_up_signals, fig = inv_bot.bb_out_up_strategy(parameters=None, graph_length=50)
+    bb_out_up_signals, bb_out_up_fig = inv_bot.bb_out_up_strategy(parameters=None, graph_length=50)
 
     if bb_out_up_signals['signal'].iloc[-1]:
         msg = f'New signal from bb_out_up strategy:\n'
         msg += f'\t -> {TICKER} value: {round(sp_500_data["Adj Close"].iloc[-1], 2)}'
-        inv_bot.send_telegram_alert(msg, fig)
+        inv_bot.send_telegram_alert(msg, bb_out_up_fig)
+    else:
+        print("")
 
 
 if __name__ == '__main__':
