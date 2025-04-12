@@ -6,7 +6,7 @@ from invest_bot import InvestBot
 
 def main():
     # Parameters
-    HIST_PERIOD = '3y'
+    HIST_PERIOD = '1y'
     INTERVAL = '1d'
     TICKER = "^GSPC"
 
